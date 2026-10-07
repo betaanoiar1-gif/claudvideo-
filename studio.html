@@ -7,7 +7,7 @@
 <style>
   html, body { margin: 0; background: #1b1820; color: #eee; font: 13px system-ui, sans-serif; }
   main { padding: 12px; display: grid; gap: 8px; }
-  #out { width: min(100%, 1280px); aspect-ratio: 16 / 9; height: auto; background: #F3EBDC; }
+  #out { width: min(100%, 1280px); aspect-ratio: 9 / 16; height: auto; background: #F3EBDC; }
   .p5Canvas { display: none !important; }
   .bar { display: flex; gap: 10px; align-items: center; max-width: 1280px; }
   #scrub { flex: 1; }
@@ -19,6 +19,15 @@
 <body>
 <main>
   <canvas id="out" width="1920" height="1080"></canvas>
+<script>
+  window.VERTICAL_OUTPUT = new URLSearchParams(location.search).has("vertical");
+  if (window.VERTICAL_OUTPUT) {
+    const out = document.getElementById("out");
+    out.width = 1080;
+    out.height = 1920;
+    out.style.aspectRatio = "9 / 16";
+  }
+</script>
   <div class="bar"><input id="scrub" type="range" min="0" max="11" step="0.0417" value="0"><span id="tt">loading…</span></div>
 </main>
 <!-- engine -->

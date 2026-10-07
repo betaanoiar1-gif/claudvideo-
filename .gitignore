@@ -1,2 +1,11 @@
 node_modules
 out/
+
+# Local Chrome / runtime
+browser/
+
+# Local backup copies
+*.before-vertical
+*.before-vertical-query
+*.before-vertical-query-2
+*.before-vertical-composite

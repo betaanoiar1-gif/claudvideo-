@@ -36,6 +36,9 @@ function playwrightChromes() {
 const CHROME = CHROMES.find(p => p && existsSync(p));
 if (!CHROME) { console.error('Chrome not found: pass --chrome=<path> or set CHROME_PATH'); process.exit(1); }
 const fps = +(args.fps || 24), FRAMES_DIR = 'out/frames';
+const VERTICAL = !!args.vertical;
+const OUTPUT_W = VERTICAL ? 1080 : 1920;
+const OUTPUT_H = VERTICAL ? 1920 : 1080;
 const run = (cmd, a) => new Promise((ok, bad) => { const p = spawn(cmd, a, { stdio: 'inherit' }); p.on('close', c => c ? bad(new Error(cmd + ' exited ' + c)) : ok()); });
 const times = s => String(s).split(',').map(Number);
 const span = s => String(s).split(':').map(Number);
@@ -70,7 +73,8 @@ async function openPage(tag = '') {
   const page = await browser.newPage();
   page.on('console', m => { if (['error', 'warn'].includes(m.type())) console.log(`[page${tag}]`, m.text()); });
   page.on('pageerror', e => console.log(`[page error${tag}]`, e.message));
-  await page.goto(pathToFileURL(resolve('studio.html')).href + '?render', { waitUntil: 'networkidle0' });
+  const renderQuery = VERTICAL ? '?render&vertical=1' : '?render';
+  await page.goto(pathToFileURL(resolve('studio.html')).href + renderQuery, { waitUntil: 'networkidle0' });
   await page.waitForFunction('window.ready === true', { timeout: 60000 });
   if (args.loop) {
     const ok = await page.evaluate(name => { if (!LOOPS[name]) return false; window.LOOP = LOOPS[name]; return true; }, args.loop);
@@ -120,7 +124,7 @@ if (args.sheet || args.strip) {
   mkdirSync(FRAMES_DIR, { recursive: true });
   const first = Math.round(a * fps), last = Math.min(Math.ceil(len * fps) - 1, Math.round(b * fps) - 1);
   const todo = []; for (let i = first; i <= last; i++) { const f = `${FRAMES_DIR}/f${String(i).padStart(5, '0')}.jpg`; if (!existsSync(f) || statSync(f).size < 1000) todo.push(i); }
-  console.log(`${todo.length} frames to render (${last - first + 1 - todo.length} already done), ${workers} workers`);
+  console.log(`${todo.length} frames to render (${last - first + 1 - todo.length} already done), ${workers} workers${VERTICAL ? ' [VERTICAL 9:16]' : ''}`);
   let next = 0, done = 0; const start = Date.now();
   await Promise.all(Array.from({ length: workers }, async (_, w) => {
     const page = await openPage('#' + w);

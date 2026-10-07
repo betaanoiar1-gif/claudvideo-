@@ -293,10 +293,35 @@ function draw() {
 function composite(t) {
   const c = outX;
   c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
-  c.drawImage(drawingContext.canvas, 0, 0, W, H);
-  drawLetters(c);
-  c.globalCompositeOperation = 'multiply'; c.drawImage(grainC, 0, 0);
-  c.globalCompositeOperation = 'source-over';
+
+  if (window.VERTICAL_OUTPUT) {
+    // Build the complete 1920x1080 composition first.
+    const fullC = document.createElement('canvas');
+    fullC.width = W; fullC.height = H;
+    const fullX = fullC.getContext('2d');
+
+    fullX.globalCompositeOperation = 'source-over';
+    fullX.globalAlpha = 1;
+    fullX.drawImage(drawingContext.canvas, 0, 0, W, H);
+
+    drawLetters(fullX);
+
+    fullX.globalCompositeOperation = 'multiply';
+    fullX.drawImage(grainC, 0, 0, W, H);
+    fullX.globalCompositeOperation = 'source-over';
+
+    // Crop the center of the complete 16:9 composition into 9:16.
+    const cropW = H * (outC.width / outC.height);
+    const cropX = (W - cropW) / 2;
+    c.drawImage(fullC, cropX, 0, cropW, H, 0, 0, outC.width, outC.height);
+  } else {
+    // Normal 16:9 output.
+    c.drawImage(drawingContext.canvas, 0, 0, W, H);
+    drawLetters(c);
+    c.globalCompositeOperation = 'multiply';
+    c.drawImage(grainC, 0, 0, W, H);
+    c.globalCompositeOperation = 'source-over';
+  }
 }
 window.renderAt = async (t, type = 'image/png', q = .92) => { T = t; await redraw(); composite(t); return outC.toDataURL(type, q); };
 // Contact sheet of several times, for visual checks: returns { url, ms[] }. crop = [x, y, w, h] fills each cell with just
